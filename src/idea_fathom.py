@@ -1,35 +1,100 @@
 import json
 from dataclasses import dataclass
-from typing import List
+from datetime import datetime
 
 @dataclass
 class Idea:
-    concept: str
-    market_size: int
-    competition: int
+    id: int
+    title: str
+    description: str
+    anonymous: bool
+    comments: list
+    upvotes: int
+    suggestions: list
+
+@dataclass
+class Comment:
+    id: int
+    idea_id: int
+    text: str
+
+@dataclass
+class Suggestion:
+    id: int
+    idea_id: int
+    text: str
 
 class IdeaFathom:
-    def __init__(self, knowledge_base: List[Idea]):
-        self.knowledge_base = knowledge_base
+    def __init__(self):
+        self.ideas = []
+        self.comments = []
+        self.suggestions = []
+        self.next_id = 1
 
-    def validate_idea(self, idea: Idea) -> dict:
-        """Validate an idea against the knowledge base"""
-        duplicate = any(idea.concept == existing_idea.concept for existing_idea in self.knowledge_base)
-        if duplicate:
-            return {"valid": False, "reason": "Duplicate concept"}
-        
-        # Simple validation metrics
-        market_size_valid = idea.market_size > 0
-        competition_valid = idea.competition > 0
-        
-        return {
-            "valid": market_size_valid and competition_valid,
-            "metrics": {
-                "market_size": idea.market_size,
-                "competition": idea.competition
-            }
-        }
+    def publish_idea(self, title, description, anonymous=False):
+        idea = Idea(
+            id=self.next_id,
+            title=title,
+            description=description,
+            anonymous=anonymous,
+            comments=[],
+            upvotes=0,
+            suggestions=[],
+        )
+        self.ideas.append(idea)
+        self.next_id += 1
+        return idea
 
-    def add_idea_to_knowledge_base(self, idea: Idea):
-        """Add a validated idea to the knowledge base"""
-        self.knowledge_base.append(idea)
+    def comment_on_idea(self, idea_id, text):
+        comment = Comment(
+            id=self.next_id,
+            idea_id=idea_id,
+            text=text,
+        )
+        self.comments.append(comment)
+        for idea in self.ideas:
+            if idea.id == idea_id:
+                idea.comments.append(comment)
+                break
+        self.next_id += 1
+        return comment
+
+    def suggest_improvement(self, idea_id, text):
+        suggestion = Suggestion(
+            id=self.next_id,
+            idea_id=idea_id,
+            text=text,
+        )
+        self.suggestions.append(suggestion)
+        for idea in self.ideas:
+            if idea.id == idea_id:
+                idea.suggestions.append(suggestion)
+                break
+        self.next_id += 1
+        return suggestion
+
+    def upvote_idea(self, idea_id):
+        for idea in self.ideas:
+            if idea.id == idea_id:
+                idea.upvotes += 1
+                break
+
+    def get_idea(self, idea_id):
+        for idea in self.ideas:
+            if idea.id == idea_id:
+                return idea
+        return None
+
+    def get_comments(self, idea_id):
+        comments = []
+        for comment in self.comments:
+            if comment.idea_id == idea_id:
+                comments.append(comment)
+        return comments
+
+    def get_suggestions(self, idea_id):
+        suggestions = []
+        for suggestion in self.suggestions:
+            if suggestion.idea_id == idea_id:
+                suggestions.append(suggestion)
+        return suggestions

@@ -1,10 +1,16 @@
 # Idea Fathom
-Idea validation and novelty detection tool.
+A community feedback loop system for sharing and refining ideas.
+
+## Features
+- Publish ideas to a public feed with optional anonymity
+- Comment, upvote, or suggest improvements on ideas
+- Store and link feedback to the original idea record
 
 ## Usage
-1. Create an instance of `IdeaFathom` with a knowledge base of existing ideas.
-2. Validate a new idea using the `validate_idea` method.
-3. Add a validated idea to the knowledge base using the `add_idea_to_knowledge_base` method.
+1. Create an instance of the `IdeaFathom` class.
+2. Use the `publish_idea` method to share an idea.
+3. Use the `comment_on_idea`, `suggest_improvement`, and `upvote_idea` methods to interact with ideas.
+4. Use the `get_idea`, `get_comments`, and `get_suggestions` methods to retrieve idea information.
 
 ## Testing
-Run tests using `pytest` in the `tests` directory.
+Run `pytest` to execute the tests.
