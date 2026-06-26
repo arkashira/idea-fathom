@@ -1,60 +1,81 @@
-from idea_fathom import IdeaFathom, Idea, Comment, Suggestion
+import csv
+import io
 
-def test_publish_idea():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    assert idea.title == "Test Idea"
-    assert idea.description == "This is a test idea"
-    assert idea.anonymous == False
-    assert idea.comments == []
-    assert idea.upvotes == 0
-    assert idea.suggestions == []
+import pytest
 
-def test_comment_on_idea():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    comment = idea_fathom.comment_on_idea(idea.id, "This is a test comment")
-    assert comment.text == "This is a test comment"
-    assert comment.idea_id == idea.id
-    assert idea.comments[0].text == "This is a test comment"
+from idea_fathom import IdeaFathomDashboard
 
-def test_suggest_improvement():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    suggestion = idea_fathom.suggest_improvement(idea.id, "This is a test suggestion")
-    assert suggestion.text == "This is a test suggestion"
-    assert suggestion.idea_id == idea.id
-    assert idea.suggestions[0].text == "This is a test suggestion"
 
-def test_upvote_idea():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    idea_fathom.upvote_idea(idea.id)
-    assert idea.upvotes == 1
+@pytest.fixture
+def dashboard():
+    return IdeaFathomDashboard()
 
-def test_get_idea():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    retrieved_idea = idea_fathom.get_idea(idea.id)
-    assert retrieved_idea.title == "Test Idea"
-    assert retrieved_idea.description == "This is a test idea"
 
-def test_get_comments():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    comment1 = idea_fathom.comment_on_idea(idea.id, "This is a test comment 1")
-    comment2 = idea_fathom.comment_on_idea(idea.id, "This is a test comment 2")
-    comments = idea_fathom.get_comments(idea.id)
-    assert len(comments) == 2
-    assert comments[0].text == "This is a test comment 1"
-    assert comments[1].text == "This is a test comment 2"
+def test_add_idea_increments_total(dashboard):
+    assert dashboard.total_ideas() == 0
+    id1 = dashboard.add_idea("First idea")
+    assert isinstance(id1, int)
+    assert dashboard.total_ideas() == 1
+    id2 = dashboard.add_idea("Second idea")
+    assert dashboard.total_ideas() == 2
+    # Ensure ids are unique
+    assert id1 != id2
 
-def test_get_suggestions():
-    idea_fathom = IdeaFathom()
-    idea = idea_fathom.publish_idea("Test Idea", "This is a test idea")
-    suggestion1 = idea_fathom.suggest_improvement(idea.id, "This is a test suggestion 1")
-    suggestion2 = idea_fathom.suggest_improvement(idea.id, "This is a test suggestion 2")
-    suggestions = idea_fathom.get_suggestions(idea.id)
-    assert len(suggestions) == 2
-    assert suggestions[0].text == "This is a test suggestion 1"
-    assert suggestions[1].text == "This is a test suggestion 2"
+
+def test_validate_idea_updates_counts_and_average(dashboard):
+    id1 = dashboard.add_idea("Idea A")
+    id2 = dashboard.add_idea("Idea B")
+    # No validated ideas yet
+    assert dashboard.validated_ideas() == 0
+    assert dashboard.average_validation_score() == 0.0
+
+    dashboard.validate_idea(id1, 8.0)
+    assert dashboard.validated_ideas() == 1
+    assert dashboard.average_validation_score() == 8.0
+
+    dashboard.validate_idea(id2, 4.0)
+    assert dashboard.validated_ideas() == 2
+    assert dashboard.average_validation_score() == pytest.approx((8.0 + 4.0) / 2)
+
+
+def test_average_when_none_validated_returns_zero(dashboard):
+    dashboard.add_idea("Lonely idea")
+    assert dashboard.validated_ideas() == 0
+    assert dashboard.average_validation_score() == 0.0
+
+
+def test_export_csv_structure_and_content(dashboard):
+    id1 = dashboard.add_idea("Alpha")
+    id2 = dashboard.add_idea("Beta")
+    dashboard.validate_idea(id2, 5.5)
+
+    csv_text = dashboard.export_csv()
+    f = io.StringIO(csv_text)
+    reader = csv.reader(f)
+    rows = list(reader)
+
+    # Header + two data rows
+    assert rows[0] == ["id", "title", "validated", "validation_score"]
+    # Row order corresponds to insertion order (dict preserves order in py3.7+)
+    assert rows[1] == [str(id1), "Alpha", "False", ""]
+    assert rows[2] == [str(id2), "Beta", "True", "5.50"]
+
+
+def test_validate_nonexistent_idea_raises_key_error(dashboard):
+    with pytest.raises(KeyError) as exc:
+        dashboard.validate_idea(999, 3.0)
+    assert "Idea id 999 not found" in str(exc.value)
+
+
+def test_validate_negative_score_raises_value_error(dashboard):
+    iid = dashboard.add_idea("NegScore")
+    with pytest.raises(ValueError) as exc:
+        dashboard.validate_idea(iid, -1.0)
+    assert "must be non‑negative" in str(exc.value)
+
+
+def test_add_idea_requires_nonempty_title(dashboard):
+    with pytest.raises(ValueError):
+        dashboard.add_idea("")
+    with pytest.raises(ValueError):
+        dashboard.add_idea(123)  # type: ignore

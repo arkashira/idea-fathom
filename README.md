@@ -1,16 +1,18 @@
-# Idea Fathom
-A community feedback loop system for sharing and refining ideas.
+# Idea‑Fathom
+
+A tiny, pure‑Python library that lets indie hackers track their ideas, validation
+events and related metrics.
 
 ## Features
-- Publish ideas to a public feed with optional anonymity
-- Comment, upvote, or suggest improvements on ideas
-- Store and link feedback to the original idea record
 
-## Usage
-1. Create an instance of the `IdeaFathom` class.
-2. Use the `publish_idea` method to share an idea.
-3. Use the `comment_on_idea`, `suggest_improvement`, and `upvote_idea` methods to interact with ideas.
-4. Use the `get_idea`, `get_comments`, and `get_suggestions` methods to retrieve idea information.
+* **Add ideas** – each gets a unique integer id.
+* **Validate ideas** – store a non‑negative validation score.
+* **Dashboard metrics**
+  * total number of ideas
+  * number of validated ideas
+  * average validation score (0 when none are validated)
+* **CSV export** – all ideas with validation status and score.
 
-## Testing
-Run `pytest` to execute the tests.
+All logic lives in the standard library – no external runtime dependencies.
+
+## Installation
