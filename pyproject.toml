@@ -1,10 +1,7 @@
-[project]
-name = "idea-fathom"
-version = "0.1.0"
-description = "Minimal analytics dashboard for tracking ideas and validation metrics."
-readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[project]
+name = "axentx-product"
+version = "0.1.0"

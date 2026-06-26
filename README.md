@@ -1,18 +1,10 @@
-# Idea‑Fathom
-
-A tiny, pure‑Python library that lets indie hackers track their ideas, validation
-events and related metrics.
+# Idea-Fathom
+A tool to capture and manage user ideas, allowing founders to revisit their previous ideas with status tracking.
 
 ## Features
+- Add new ideas with a title and description.
+- View a list of all ideas with their status (Draft, In Ideation, Validated, Rejected).
+- Update the status of an idea.
 
-* **Add ideas** – each gets a unique integer id.
-* **Validate ideas** – store a non‑negative validation score.
-* **Dashboard metrics**
-  * total number of ideas
-  * number of validated ideas
-  * average validation score (0 when none are validated)
-* **CSV export** – all ideas with validation status and score.
-
-All logic lives in the standard library – no external runtime dependencies.
-
-## Installation
+## Usage
+1. Add an idea:
